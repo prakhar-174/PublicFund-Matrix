@@ -18,6 +18,7 @@ import { formatCurrency, formatPercent } from '@/lib/utils'
 import StatCard from '@/components/StatCard'
 import AllocationTreemap from '@/components/charts/AllocationTreemap'
 import SpendingAreaChart from '@/components/charts/SpendingAreaChart'
+import EmptyState from '@/components/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -98,7 +99,13 @@ export default function DashboardPage() {
     : 0
 
   return (
-    <div className="space-y-6 pb-12">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="space-y-6 pb-12"
+    >
       {/* Page Title & Context Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -224,7 +231,7 @@ export default function DashboardPage() {
             <Skeleton className="h-8 w-full bg-slate-800" />
           </div>
         ) : topAllocations.length > 0 ? (
-          <div className="rounded-lg border border-slate-800/80 overflow-hidden">
+          <div className="rounded-lg border border-slate-800/80 overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-950/60">
                 <TableRow className="border-slate-800 hover:bg-transparent">
@@ -324,11 +331,14 @@ export default function DashboardPage() {
             </Table>
           </div>
         ) : (
-          <div className="py-12 text-center text-sm text-slate-500 border border-dashed border-slate-800 rounded-lg">
-            No departmental budget allocations found for the active fiscal year.
-          </div>
+          <EmptyState
+            icon={Wallet}
+            title="No department allocations found"
+            description="No departmental budget allocations found for the active fiscal year."
+            className="my-2 border-dashed bg-transparent"
+          />
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }

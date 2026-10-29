@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   Search,
   Plus,
@@ -148,7 +149,13 @@ export default function BudgetsPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="space-y-6 pb-12"
+    >
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -383,6 +390,7 @@ export default function BudgetsPage() {
                             type="button"
                             onClick={() => handleEdit(alloc)}
                             className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            aria-label="Edit allocation"
                             title="Edit allocation"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -392,6 +400,7 @@ export default function BudgetsPage() {
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
+                                aria-label="More allocation actions"
                                 className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                               >
                                 <MoreVertical className="w-3.5 h-3.5" />
@@ -433,6 +442,6 @@ export default function BudgetsPage() {
         allocation={editingAllocation}
         defaultFiscalYearId={activeFiscalYear?.id}
       />
-    </div>
+    </motion.div>
   )
 }

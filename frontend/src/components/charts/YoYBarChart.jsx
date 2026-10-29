@@ -76,7 +76,11 @@ export default function YoYBarChart({
         </p>
       </div>
 
-      <div className="h-[260px] w-full">
+      <div
+        className="h-[260px] w-full"
+        role="img"
+        aria-label="Bar chart showing year-over-year allocation versus spend"
+      >
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart

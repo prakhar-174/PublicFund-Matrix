@@ -144,7 +144,11 @@ export default function AllocationTreemap({
       </div>
 
       {/* Treemap Content */}
-      <div className="h-[240px] w-full">
+      <div
+        className="h-[240px] w-full"
+        role="img"
+        aria-label="Treemap chart showing budget distribution across departments"
+      >
         {treeData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <Treemap

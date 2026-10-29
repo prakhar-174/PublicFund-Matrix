@@ -58,9 +58,15 @@ class BudgetAnalyticsService:
         df = df.sort_values(
             ["utilization_rate", "department__name"], ascending=[False, True], na_position="last"
         )
-        out = df.rename(columns={"department_id": "department", "department__name": "department_name"})[
+        out = df.rename(
+            columns={
+                "department_id": "department",
+                "department__name": "department_name",
+                "department__code": "department_code",
+            }
+        )[
             [
-                "department", "department_name", "allocated_amount", "spent_amount",
+                "department", "department_name", "department_code", "allocated_amount", "spent_amount",
                 "utilization_rate", "utilization_rank", "performance_score",
                 "performance_rank", "metric_count",
             ]
@@ -138,9 +144,15 @@ class BudgetAnalyticsService:
         df["funding_gap"] = df["requested_amount"] - df["allocated_amount"]
         df["utilization_rate"] = safe_ratio(df["spent_amount"], df["allocated_amount"])
         flagged = df[df["funded_ratio"] < threshold].sort_values("funded_ratio")
-        out = flagged.rename(columns={"department_id": "department", "department__name": "department_name"})[
+        out = flagged.rename(
+            columns={
+                "department_id": "department",
+                "department__name": "department_name",
+                "department__code": "department_code",
+            }
+        )[
             [
-                "department", "department_name", "allocated_amount", "requested_amount",
+                "department", "department_name", "department_code", "allocated_amount", "requested_amount",
                 "funded_ratio", "funding_gap", "utilization_rate",
             ]
         ]

@@ -11,11 +11,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Landmark,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/store/AuthContext'
 import { cn } from '@/lib/utils'
 
-export default function Sidebar({ isCollapsed: externalCollapsed, onToggle }) {
+export default function Sidebar({
+  isCollapsed: externalCollapsed,
+  onToggle,
+  isMobileOpen = false,
+  onCloseMobile,
+}) {
   const [internalCollapsed, setInternalCollapsed] = useState(false)
   const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
   const setIsCollapsed = onToggle || setInternalCollapsed
@@ -54,129 +60,85 @@ export default function Sidebar({ isCollapsed: externalCollapsed, onToggle }) {
     ? `${user.first_name} ${user.last_name || ''}`.trim()
     : user?.username || user?.email || 'User'
 
-  return (
-    <motion.aside
-      initial={false}
-      animate={{ width: isCollapsed ? 64 : 240 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className="h-screen bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 select-none z-20 relative overflow-hidden"
-    >
-      {/* Top Logo Section */}
-      <div>
-        <div className="h-16 flex items-center px-4 border-b border-slate-800/80 gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-accent-blue shrink-0">
-            <Landmark className="w-5 h-5 text-accent-blue" />
-          </div>
-
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.15 }}
-                className="whitespace-nowrap overflow-hidden"
-              >
-                <span className="font-bold text-lg text-white tracking-tight">BudgetIQ</span>
-              </motion.div>
+  // Render navigation list
+  const renderNavList = (mobile = false) => (
+    <nav className="p-2 space-y-1 mt-2">
+      {navItems.map((item) => {
+        const Icon = item.icon
+        return (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/'}
+            onClick={() => {
+              if (mobile && onCloseMobile) onCloseMobile()
+            }}
+            title={!mobile && isCollapsed ? item.label : undefined}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border-l-4',
+                isActive
+                  ? 'border-accent-blue bg-slate-800 text-accent-blue font-semibold'
+                  : 'border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-200',
+                !mobile && isCollapsed && 'justify-center px-2'
+              )
+            }
+          >
+            <Icon className="w-5 h-5 shrink-0" />
+            {(mobile || !isCollapsed) && (
+              <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
             )}
-          </AnimatePresence>
+          </NavLink>
+        )
+      })}
+    </nav>
+  )
+
+  // Render bottom user info card
+  const renderBottomCard = (mobile = false) => (
+    <div className="p-2 border-t border-slate-800/80 space-y-2">
+      <div
+        className={cn(
+          'flex items-center gap-2.5 p-2 rounded-lg bg-slate-900/60',
+          !mobile && isCollapsed && 'justify-center p-1'
+        )}
+      >
+        <div
+          className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-white font-semibold text-xs flex items-center justify-center shrink-0"
+          title={displayName}
+        >
+          {getInitials()}
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-2 space-y-1 mt-2">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                title={isCollapsed ? item.label : undefined}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border-l-4',
-                    isActive
-                      ? 'border-accent-blue bg-slate-800 text-accent-blue font-semibold'
-                      : 'border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-200',
-                    isCollapsed && 'justify-center px-2'
-                  )
-                }
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                <AnimatePresence>
-                  {!isCollapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="whitespace-nowrap overflow-hidden"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </NavLink>
-            )
-          })}
-        </nav>
+        {(mobile || !isCollapsed) && (
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <p className="text-sm font-medium text-white truncate">{displayName}</p>
+            <p className="text-xs text-slate-400 capitalize truncate">
+              {user?.role || 'User'}
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={logout}
+          aria-label="Log out"
+          title="Log out"
+          className="p-1.5 text-slate-400 hover:text-accent-red hover:bg-slate-800 rounded-md transition-colors shrink-0"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Bottom Section: User Info + Logout + Collapse Toggle */}
-      <div className="p-2 border-t border-slate-800/80 space-y-2">
-        {/* User Card */}
-        <div
-          className={cn(
-            'flex items-center gap-2.5 p-2 rounded-lg bg-slate-900/60',
-            isCollapsed && 'justify-center p-1'
-          )}
-        >
-          {/* Avatar with initials */}
-          <div
-            className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-white font-semibold text-xs flex items-center justify-center shrink-0"
-            title={displayName}
-          >
-            {getInitials()}
-          </div>
-
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.15 }}
-                className="flex-1 min-w-0 overflow-hidden"
-              >
-                <p className="text-sm font-medium text-white truncate">{displayName}</p>
-                <p className="text-xs text-slate-400 capitalize truncate">
-                  {user?.role || 'User'}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Logout button */}
-          <button
-            type="button"
-            onClick={logout}
-            title="Log out"
-            className="p-1.5 text-slate-400 hover:text-accent-red hover:bg-slate-800 rounded-md transition-colors shrink-0"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Collapse toggle button */}
+      {!mobile && (
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className={cn(
             'w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md transition-colors',
             isCollapsed && 'justify-center px-1'
           )}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4 shrink-0" />
@@ -187,7 +149,102 @@ export default function Sidebar({ isCollapsed: externalCollapsed, onToggle }) {
             </>
           )}
         </button>
-      </div>
-    </motion.aside>
+      )}
+    </div>
+  )
+
+  return (
+    <>
+      {/* ========================================================
+          1. DESKTOP SIDEBAR (Visible on >= lg screens)
+      ======================================================== */}
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 64 : 240 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+        className="hidden lg:flex h-screen bg-slate-900 border-r border-slate-800 flex-col justify-between shrink-0 select-none z-20 relative overflow-hidden"
+      >
+        <div>
+          {/* Top Logo Section */}
+          <div className="h-16 flex items-center px-4 border-b border-slate-800/80 gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-accent-blue shrink-0">
+              <Landmark className="w-5 h-5 text-accent-blue" />
+            </div>
+
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="whitespace-nowrap overflow-hidden"
+                >
+                  <span className="font-bold text-lg text-white tracking-tight">BudgetIQ</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {renderNavList(false)}
+        </div>
+
+        {renderBottomCard(false)}
+      </motion.aside>
+
+      {/* ========================================================
+          2. MOBILE DRAWER WITH BACKDROP OVERLAY (< lg screens)
+      ======================================================== */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onCloseMobile}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+              aria-hidden="true"
+            />
+
+            {/* Slide-in Drawer from Left */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 240 }}
+              className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 z-50 flex flex-col justify-between select-none lg:hidden shadow-2xl"
+            >
+              <div>
+                {/* Mobile Drawer Header */}
+                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800/80">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 text-accent-blue shrink-0">
+                      <Landmark className="w-5 h-5 text-accent-blue" />
+                    </div>
+                    <span className="font-bold text-lg text-white tracking-tight">BudgetIQ</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onCloseMobile}
+                    aria-label="Close navigation drawer"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {renderNavList(true)}
+              </div>
+
+              {renderBottomCard(true)}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

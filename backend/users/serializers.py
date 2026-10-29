@@ -21,8 +21,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True)
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(write_only=True, min_length=8, required=False)
+    password_confirm = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
@@ -38,8 +39,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        if attrs["password"] != attrs.pop("password_confirm"):
+        if not attrs.get("username") and attrs.get("email"):
+            base_user = attrs["email"].split("@")[0]
+            candidate = base_user
+            idx = 1
+            while User.objects.filter(username=candidate).exists():
+                candidate = f"{base_user}{idx}"
+                idx += 1
+            attrs["username"] = candidate
+
+        # If no password is provided (e.g. invite flow), generate a random temporary password
+        if not attrs.get("password"):
+            import secrets
+            import string
+            chars = string.ascii_letters + string.digits + "!@#$%"
+            temp_pw = "".join(secrets.choice(chars) for _ in range(10)) + "A1!"
+            attrs["password"] = temp_pw
+            attrs["password_confirm"] = temp_pw
+        elif attrs.get("password") != attrs.pop("password_confirm", None):
             raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
+
         validate_password(attrs["password"], user=User(username=attrs.get("username", "")))
 
         # Public sign-up always yields a viewer. Only an authenticated admin may
@@ -63,11 +82,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     """Admin-only view for listing users and changing role/department/active."""
 
+    department_name = serializers.CharField(source="department.name", read_only=True, default=None)
+
     class Meta:
         model = User
         fields = [
             "id", "username", "email", "first_name", "last_name",
-            "role", "department", "is_active", "date_joined",
+            "role", "department", "department_name", "is_active", "date_joined",
         ]
         read_only_fields = ["id", "username", "date_joined"]
 

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Pencil,
@@ -30,6 +31,8 @@ import {
 
 import YoYBarChart from '@/components/charts/YoYBarChart'
 import AllocationFormModal from '@/components/AllocationFormModal'
+import EmptyState from '@/components/EmptyState'
+import { Target } from 'lucide-react'
 
 export default function BudgetDetailPage() {
   const { deptId } = useParams()
@@ -98,7 +101,13 @@ export default function BudgetDetailPage() {
   const status = (currentAllocation?.status || 'draft').toLowerCase()
 
   return (
-    <div className="space-y-6 pb-12">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="space-y-6 pb-12"
+    >
       {/* Page Header */}
       <div className="flex flex-col gap-3">
         <Link
@@ -182,7 +191,7 @@ export default function BudgetDetailPage() {
                 <Skeleton className="h-8 w-full bg-slate-800" />
               </div>
             ) : evaluatedMetrics.length > 0 ? (
-              <div className="rounded-lg border border-slate-800/80 overflow-hidden">
+              <div className="rounded-lg border border-slate-800/80 overflow-x-auto">
                 <Table>
                   <TableHeader className="bg-slate-950/60">
                     <TableRow className="border-slate-800 hover:bg-transparent">
@@ -234,9 +243,12 @@ export default function BudgetDetailPage() {
                 </Table>
               </div>
             ) : (
-              <div className="py-10 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-lg">
-                No performance metrics recorded for this department in {activeFiscalYear?.label || 'this year'}.
-              </div>
+              <EmptyState
+                icon={Target}
+                title="No performance metrics recorded"
+                description={`No performance metrics evaluated for this department in ${activeFiscalYear?.label || 'the active fiscal year'}.`}
+                className="my-2 border-dashed bg-transparent"
+              />
             )}
           </div>
         </div>
@@ -409,6 +421,6 @@ export default function BudgetDetailPage() {
           defaultFiscalYearId={activeFiscalYear?.id}
         />
       )}
-    </div>
+    </motion.div>
   )
 }

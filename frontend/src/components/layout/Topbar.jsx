@@ -1,5 +1,5 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom'
-import { Bell, User, LogOut } from 'lucide-react'
+import { Bell, User, LogOut, Menu } from 'lucide-react'
 import { useAuth } from '@/store/AuthContext'
 import { useFiscalYear } from '@/store/FiscalYearContext'
 import {
@@ -27,7 +27,7 @@ const routeTitles = {
   '/admin/import': 'Data Import & Ingestion',
 }
 
-export default function Topbar({ title }) {
+export default function Topbar({ title, onToggleMobileNav }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -78,74 +78,89 @@ export default function Topbar({ title }) {
   }
 
   return (
-    <header className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between shrink-0 z-10">
-      {/* Left: Page Title + Breadcrumbs */}
-      <div className="flex flex-col justify-center min-w-0">
-        <h1 className="text-lg font-bold text-white truncate tracking-tight">
-          {currentTitle}
-        </h1>
-        <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-xs text-slate-400">
-          {breadcrumbs.map((crumb, idx) => {
-            const isLast = idx === breadcrumbs.length - 1
-            return (
-              <span key={crumb.path} className="flex items-center space-x-1">
-                {idx > 0 && <span className="text-slate-600">/</span>}
-                {isLast ? (
-                  <span className="text-slate-300 font-medium">{crumb.label}</span>
-                ) : (
-                  <Link
-                    to={crumb.path}
-                    className="hover:text-slate-200 transition-colors"
-                  >
-                    {crumb.label}
-                  </Link>
-                )}
-              </span>
-            )
-          })}
-        </nav>
-      </div>
+    <header className="h-16 bg-slate-900 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between shrink-0 z-10 gap-3">
+      {/* Left: Hamburger (Mobile) + Page Title + Breadcrumbs */}
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile Hamburger Drawer Toggle (< lg) */}
+        {onToggleMobileNav && (
+          <button
+            type="button"
+            onClick={onToggleMobileNav}
+            aria-label="Toggle navigation menu"
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg lg:hidden shrink-0 transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
-      {/* Center: FiscalYearSelector */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-400 font-medium hidden md:inline">
-          Fiscal Year:
-        </span>
-        <Select
-          value={activeFiscalYear?.id ? String(activeFiscalYear.id) : ''}
-          onValueChange={(val) => setActiveFiscalYear(val)}
-        >
-          <SelectTrigger className="w-[170px] h-9 bg-slate-900 border-slate-800 text-white text-xs focus:ring-accent-blue focus:ring-1">
-            <SelectValue placeholder={isLoading ? 'Loading FY...' : 'Select FY'} />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-800 text-white">
-            {fiscalYears.map((fy) => (
-              <SelectItem
-                key={fy.id}
-                value={String(fy.id)}
-                className="text-xs text-slate-200 focus:bg-slate-800 focus:text-white"
-              >
-                <div className="flex items-center justify-between w-full gap-2">
-                  <span>{fy.label || `FY ${fy.year}`}</span>
-                  {fy.is_active && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-emerald/20 text-accent-emerald font-medium ml-1">
-                      Active
-                    </span>
+        <div className="flex flex-col justify-center min-w-0">
+          <h1 className="text-base sm:text-lg font-bold text-white truncate tracking-tight">
+            {currentTitle}
+          </h1>
+          {/* Breadcrumb: hidden on mobile (< md), visible on desktop */}
+          <nav aria-label="Breadcrumb" className="hidden md:flex items-center space-x-1 text-xs text-slate-400">
+            {breadcrumbs.map((crumb, idx) => {
+              const isLast = idx === breadcrumbs.length - 1
+              return (
+                <span key={crumb.path} className="flex items-center space-x-1">
+                  {idx > 0 && <span className="text-slate-600">/</span>}
+                  {isLast ? (
+                    <span className="text-slate-300 font-medium">{crumb.label}</span>
+                  ) : (
+                    <Link
+                      to={crumb.path}
+                      className="hover:text-slate-200 transition-colors"
+                    >
+                      {crumb.label}
+                    </Link>
                   )}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                </span>
+              )
+            })}
+          </nav>
+        </div>
       </div>
 
-      {/* Right: Notifications & Profile Dropdown */}
-      <div className="flex items-center gap-3">
-        {/* Notification Bell */}
+      {/* Right Controls: Fiscal Year Selector + Avatar */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Fiscal Year Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 font-medium hidden md:inline">
+            Fiscal Year:
+          </span>
+          <Select
+            value={activeFiscalYear?.id ? String(activeFiscalYear.id) : ''}
+            onValueChange={(val) => setActiveFiscalYear(val)}
+          >
+            <SelectTrigger className="w-[125px] sm:w-[160px] h-9 bg-slate-950 border-slate-800 text-white text-xs focus:ring-accent-blue focus:ring-1">
+              <SelectValue placeholder={isLoading ? 'Loading...' : 'Select FY'} />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-800 text-white">
+              {fiscalYears.map((fy) => (
+                <SelectItem
+                  key={fy.id}
+                  value={String(fy.id)}
+                  className="text-xs text-slate-200 focus:bg-slate-800 focus:text-white cursor-pointer"
+                >
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <span>{fy.label || `FY ${fy.year}`}</span>
+                    {fy.is_active && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-emerald/20 text-accent-emerald font-medium ml-1">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Notification Bell (Optional on desktop) */}
         <button
           type="button"
           aria-label="View notifications"
-          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative"
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative hidden sm:flex"
         >
           <Bell className="w-4 h-4 text-slate-400" />
         </button>
@@ -155,6 +170,7 @@ export default function Topbar({ title }) {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
+              aria-label="User account menu"
               className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover:ring-slate-700 focus:outline-none focus:ring-2 focus:ring-accent-blue transition-all"
             >
               <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-white font-semibold text-xs flex items-center justify-center">
